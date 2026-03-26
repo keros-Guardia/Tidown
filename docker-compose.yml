@@ -1,0 +1,14 @@
+version: "3.9"
+
+services:
+  musicapp:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/app/data
+    environment:
+      - DATABASE_URL=sqlite+aiosqlite:////app/data/musicapp.db
+    env_file:
+      - .env
+    restart: unless-stopped

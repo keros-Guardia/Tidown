@@ -1,0 +1,1796 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Resonance</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+<style>
+  /* ── Reset & Variables ─────────────────────────────────────────────────── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:       #000000; /* Noir AMOLED */
+    --surface:  #000000;
+    --card:     #000000;
+    --border:   #2a2a2a; /* Bordures subtiles */
+    --accent:   #ffffff; /* Blanc pur */
+    --accent2:  #888888;
+    --muted:    #333333;
+    --text:     #ffffff;
+    --text-dim: #999999;
+    --danger:   #ff4444;
+    --radius:   6px;     /* Bordures plus minimalistes */
+    --sidebar:  240px;
+  }
+
+  html, body { height: 100%; background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 15px; overflow: hidden; }
+
+  /* ── Layout ────────────────────────────────────────────────────────────── */
+  #app { display: flex; height: 100vh; }
+
+  /* ── Auth Screen ───────────────────────────────────────────────────────── */
+  #auth-screen {
+    display: flex; align-items: center; justify-content: center;
+    width: 100%; height: 100%;
+    background: var(--bg); /* Plus de dégradé violet */
+  }
+
+  .auth-box {
+    width: 400px; background: var(--card); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 40px; animation: fadeUp .4s ease;
+  }
+
+  .auth-logo { font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 800; color: var(--accent); letter-spacing: -1px; margin-bottom: 8px; }
+  .auth-tagline { color: var(--text-dim); font-size: 13px; margin-bottom: 32px; }
+
+  .auth-tabs { display: flex; gap: 4px; margin-bottom: 28px; background: var(--surface); border-radius: var(--radius); padding: 4px; border: 1px solid var(--border); }
+  .auth-tab { flex: 1; padding: 8px; text-align: center; font-size: 13px; font-weight: 500; border-radius: var(--radius); cursor: pointer; color: var(--text-dim); transition: all .2s; }
+  .auth-tab.active { background: var(--accent); color: #000; }
+
+  label { display: block; font-size: 12px; font-weight: 500; color: var(--text-dim); margin-bottom: 6px; letter-spacing: .05em; text-transform: uppercase; }
+  input { width: 100%; background: var(--surface); border: 1px solid var(--border); color: var(--text); border-radius: var(--radius); padding: 11px 14px; font-size: 14px; font-family: inherit; outline: none; transition: border-color .2s; }
+  input:focus { border-color: var(--accent); }
+  .form-group { margin-bottom: 16px; }
+
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 11px 20px; border-radius: var(--radius); font-size: 14px; font-weight: 500; font-family: inherit; cursor: pointer; border: none; transition: all .15s; }
+  .btn-primary { background: var(--accent); color: #000; width: 100%; margin-top: 8px; font-weight: 600; }
+  .btn-primary:hover { opacity: 0.8; }
+  .btn-ghost { background: transparent; color: var(--text-dim); border: 1px solid var(--border); }
+  .btn-ghost:hover { border-color: var(--muted); color: var(--text); }
+  .btn-danger { background: transparent; color: var(--danger); border: 1px solid var(--border); }
+  .btn-danger:hover { background: var(--danger); color: #000; border-color: var(--danger); }
+  .btn-sm { padding: 6px 12px; font-size: 12px; }
+  .btn-accent2 { background: var(--accent2); color: #000; }
+
+  .error-msg { color: var(--danger); font-size: 13px; margin-top: 10px; text-align: center; }
+
+  /* ── Sidebar ────────────────────────────────────────────────────────────── */
+  #sidebar {
+    width: var(--sidebar); flex-shrink: 0; background: var(--surface);
+    border-right: 1px solid var(--border); display: flex; flex-direction: column;
+    padding: 24px 0; overflow-y: auto;
+  }
+
+  .sidebar-logo { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 800; color: var(--accent); letter-spacing: -1px; padding: 0 20px; margin-bottom: 32px; }
+
+  .nav-section { padding: 0 12px; margin-bottom: 24px; }
+  .nav-label { font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); padding: 0 8px; margin-bottom: 6px; }
+  .nav-item {
+    display: flex; align-items: center; gap: 10px; padding: 9px 12px;
+    border-radius: var(--radius); cursor: pointer; font-size: 14px; color: var(--text-dim);
+    transition: all .15s; position: relative;
+  }
+  .nav-item:hover { background: var(--border); color: var(--text); }
+  .nav-item.active { background: var(--text); color: #000; }
+  .nav-item .icon { font-size: 16px; width: 20px; text-align: center; filter: grayscale(1); }
+  .nav-item.active .icon { filter: grayscale(1) invert(1); }
+
+  .sidebar-bottom { margin-top: auto; padding: 0 12px; }
+  .user-chip { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: var(--radius); background: transparent; border: 1px solid var(--border); }
+  .user-avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--accent); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: #000; flex-shrink: 0; }
+  .user-info { overflow: hidden; }
+  .user-name { font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .user-lastfm { font-size: 11px; color: var(--text-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  /* ── Main content ───────────────────────────────────────────────────────── */
+  #main { flex: 1; overflow-y: auto; }
+
+  .page { display: none; padding: 32px; max-width: 900px; animation: fadeUp .3s ease; }
+  .page.active { display: block; }
+
+  .page-header { margin-bottom: 28px; }
+  .page-title { font-family: 'Syne', sans-serif; font-size: 26px; font-weight: 800; color: var(--text); }
+  .page-subtitle { color: var(--text-dim); font-size: 14px; margin-top: 4px; }
+
+  /* ── Search ─────────────────────────────────────────────────────────────── */
+  .search-bar-wrap { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+  .search-input { width: 100%; background: transparent; border: 1px solid var(--border); color: var(--text); padding: 14px 18px; border-radius: var(--radius); font-size: 16px; font-family: inherit; outline: none; transition: border-color .2s; }
+  .search-input::placeholder { color: var(--muted); }
+  .search-input:focus { border-color: var(--accent); }
+  .search-btn { width: auto !important; align-self: flex-start; padding: 10px 28px; }
+  .search-type-tabs { display: flex; gap: 4px; margin-bottom: 20px; }
+  .stab { padding: 6px 14px; border-radius: var(--radius); font-size: 13px; cursor: pointer; border: 1px solid var(--border); color: var(--text-dim); background: transparent; font-family: inherit; transition: all .15s; }
+  .stab.active { background: var(--accent); color: #000; border-color: var(--accent); font-weight: 600; }
+
+  /* ── Cards grid ─────────────────────────────────────────────────────────── */
+  .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 14px; }
+  .card-list { display: flex; flex-direction: column; gap: 8px; }
+
+  .artist-card { background: transparent; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; cursor: pointer; transition: all .2s; }
+  .artist-card:hover { border-color: var(--text); transform: translateY(-2px); }
+  .artist-card-img { width: 100%; aspect-ratio: 1; object-fit: cover; background: var(--border); }
+  .artist-card-img-placeholder { width: 100%; aspect-ratio: 1; background: var(--border); display: flex; align-items: center; justify-content: center; font-size: 40px; color: var(--muted); }
+  .artist-card-body { padding: 10px 12px; }
+  .artist-card-name { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .artist-card-meta { font-size: 11px; color: var(--text-dim); margin-top: 2px; }
+  .artist-card-footer { padding: 0 12px 10px; display: flex; gap: 6px; }
+
+  .track-row { display: flex; align-items: center; gap: 12px; padding: 10px 14px; background: transparent; border: 1px solid var(--border); border-radius: var(--radius); }
+  .track-row-img { width: 40px; height: 40px; border-radius: var(--radius); object-fit: cover; background: var(--border); flex-shrink: 0; }
+  .track-row-info { flex: 1; overflow: hidden; }
+  .track-row-name { font-size: 14px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .track-row-artist { font-size: 12px; color: var(--text-dim); }
+
+  /* ── Release feed ───────────────────────────────────────────────────────── */
+  .release-card { display: flex; gap: 16px; background: transparent; border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; align-items: center; }
+  .release-card-img { width: 56px; height: 56px; border-radius: var(--radius); object-fit: cover; background: var(--border); flex-shrink: 0; font-size: 24px; display: flex; align-items: center; justify-content: center; filter: grayscale(1); }
+  .release-card-info { flex: 1; }
+  .release-card-title { font-size: 15px; font-weight: 600; }
+  .release-card-artist { font-size: 13px; color: var(--text-dim); margin-top: 2px; }
+  .release-card-meta { display: flex; gap: 8px; margin-top: 6px; }
+  .badge { font-size: 11px; padding: 2px 8px; border-radius: var(--radius); background: transparent; border: 1px solid var(--border); color: var(--text-dim); display: inline-block; }
+  .badge-accent { border-color: var(--accent); color: var(--accent); }
+
+  /* ── Following list ─────────────────────────────────────────────────────── */
+  .following-row { display: flex; align-items: center; gap: 14px; padding: 12px 14px; background: transparent; border: 1px solid var(--border); border-radius: var(--radius); }
+  .following-img { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; background: var(--border); flex-shrink: 0; font-size: 22px; display: flex; align-items: center; justify-content: center; }
+  .following-info { flex: 1; }
+  .following-name { font-size: 14px; font-weight: 600; }
+  .following-date { font-size: 12px; color: var(--text-dim); }
+
+  /* ── Settings ───────────────────────────────────────────────────────────── */
+  .settings-section { background: transparent; border: 1px solid var(--border); border-radius: var(--radius); padding: 20px 24px; margin-bottom: 16px; }
+  .settings-section h3 { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; margin-bottom: 16px; }
+  .lastfm-connected { display: flex; align-items: center; gap: 12px; }
+  .lastfm-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); }
+
+  /* ── Artist detail modal ─────────────────────────────────────────────────── */
+  #modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 100; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
+  #modal-overlay.open { display: flex; }
+  #modal-box { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius); width: 520px; max-height: 85vh; overflow-y: auto; animation: fadeUp .25s ease; }
+  .modal-header-img { width: 100%; height: 180px; object-fit: cover; border-bottom: 1px solid var(--border); background: var(--border); }
+  .modal-body { padding: 24px; }
+  .modal-title { font-family: 'Syne', sans-serif; font-size: 24px; font-weight: 800; margin-bottom: 4px; }
+  .modal-meta { color: var(--text-dim); font-size: 13px; margin-bottom: 16px; }
+  .modal-bio { font-size: 13px; line-height: 1.7; color: var(--text-dim); margin-bottom: 16px; }
+  .modal-section-title { font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+  .tag-list { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
+  .tag { font-size: 11px; padding: 3px 10px; border-radius: var(--radius); border: 1px solid var(--border); color: var(--text-dim); }
+  .track-item { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--border); }
+  .track-num { font-size: 12px; color: var(--muted); width: 18px; text-align: center; }
+  .track-name { font-size: 13px; }
+  .track-plays { font-size: 11px; color: var(--text-dim); margin-left: auto; }
+  .modal-actions { display: flex; gap: 8px; margin-top: 20px; }
+
+  /* ── States ─────────────────────────────────────────────────────────────── */
+  .loading { text-align: center; padding: 40px; color: var(--text-dim); font-size: 14px; }
+  .empty { text-align: center; padding: 60px 20px; color: var(--text-dim); }
+  .empty-icon { font-size: 48px; margin-bottom: 12px; filter: grayscale(1); }
+  .empty-title { font-family: 'Syne', sans-serif; font-size: 18px; color: var(--text); margin-bottom: 6px; }
+
+  /* ── Animations ─────────────────────────────────────────────────────────── */
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .spinner { width: 24px; height: 24px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .7s linear infinite; margin: 0 auto; }
+
+  /* ── API Key Banner ─────────────────────────────────────────────────────── */
+  #apikey-banner { display: none; margin: 0 32px 0; padding: 11px 16px; background: transparent; border: 1px solid var(--border); border-radius: var(--radius); font-size: 13px; color: var(--text); align-items: center; gap: 10px; cursor: pointer; transition: background .15s; }
+  #apikey-banner:hover { background: var(--border); }
+  #apikey-banner.visible { display: flex; }
+
+  /* ── Nav badge ──────────────────────────────────────────────────────────── */
+  .nav-badge { margin-left: auto; width: 6px; height: 6px; border-radius: 50%; background: var(--text); flex-shrink: 0; }
+
+  /* ── Password strength ──────────────────────────────────────────────────── */
+  .pw-strength-bar { height: 3px; border-radius: 2px; margin-top: 6px; transition: all .3s; background: var(--border); }
+  .pw-strength-bar.weak   { background: var(--danger); width: 33%; }
+  .pw-strength-bar.medium { background: var(--text-dim); width: 66%; }
+  .pw-strength-bar.strong { background: var(--accent); width: 100%; }
+  .pw-strength-label { font-size: 11px; color: var(--text-dim); margin-top: 4px; }
+
+  /* ── Music Player ───────────────────────────────────────────────────────── */
+  #player-bar { display: none; position: fixed; bottom: 0; left: var(--sidebar); right: 0; height: 76px; background: var(--bg); border-top: 1px solid var(--border); z-index: 50; align-items: center; padding: 0 20px; gap: 16px; }
+  #player-bar.visible { display: flex; }
+  #player-thumb { width: 52px; height: 52px; border-radius: var(--radius); object-fit: cover; background: var(--border); flex-shrink: 0; font-size: 24px; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+  #player-thumb img { width: 100%; height: 100%; object-fit: cover; filter: grayscale(0.5); }
+  #player-info { flex: 1; min-width: 0; }
+  #player-track  { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #player-artist { font-size: 12px; color: var(--text-dim); margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  /* Controls */
+  #player-controls { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+  .pctrl { background: none; border: none; color: var(--text-dim); cursor: pointer; font-size: 20px; padding: 6px; line-height: 1; transition: color .15s; display: flex; align-items: center; justify-content: center; filter: grayscale(1); }
+  .pctrl:hover { color: var(--text); }
+  .pctrl.play-pause { background: var(--accent); color: #000; border-radius: 50%; width: 40px; height: 40px; font-size: 16px; }
+  .pctrl.play-pause:hover { opacity: 0.8; }
+
+  /* Progress */
+  #player-progress-wrap { flex: 1; max-width: 380px; flex-shrink: 0; }
+  #player-time { display: flex; justify-content: space-between; font-size: 10px; color: var(--text-dim); margin-bottom: 4px; }
+  #player-progress-bar { height: 3px; background: var(--border); border-radius: 2px; cursor: pointer; position: relative; }
+  #player-progress-fill { height: 100%; background: var(--accent); border-radius: 2px; width: 0%; transition: width .5s linear; pointer-events: none; }
+  #player-progress-bar:hover #player-progress-fill { opacity: 0.8; }
+
+  /* Volume */
+  #player-volume-wrap { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+  #player-vol-icon { font-size: 16px; color: var(--text-dim); cursor: pointer; }
+  #player-volume { -webkit-appearance: none; width: 70px; height: 3px; background: var(--border); border-radius: 2px; outline: none; cursor: pointer; }
+  #player-volume::-webkit-slider-thumb { -webkit-appearance: none; width: 12px; height: 12px; border-radius: 50%; background: var(--accent); cursor: pointer; }
+
+  #player-close { background: none; border: none; color: var(--text-dim); cursor: pointer; font-size: 18px; padding: 4px; line-height: 1; flex-shrink: 0; }
+  #player-close:hover { color: var(--text); }
+
+  /* Hidden YT iframe */
+  #yt-hidden { position: fixed; bottom: -9999px; width: 1px; height: 1px; pointer-events: none; }
+
+  body.player-open #main { padding-bottom: 76px; }
+  body.player-open #toast { bottom: 92px; }
+
+  /* Play button on cards */
+  .play-btn { background: var(--accent); color: #000; border: none; border-radius: 50%; width: 30px; height: 30px; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: transform .15s; }
+  .play-btn:hover { transform: scale(1.12); opacity: 0.9; }
+
+  /* Track recommendation cards */
+  .track-reco-row { display: flex; align-items: center; gap: 12px; padding: 10px 14px; background: transparent; border: 1px solid var(--border); border-radius: var(--radius); transition: border-color .15s; }
+  .track-reco-row:hover { border-color: var(--text); }
+  .track-reco-img { width: 44px; height: 44px; border-radius: var(--radius); object-fit: cover; background: var(--border); flex-shrink: 0; font-size: 20px; display: flex; align-items: center; justify-content: center; }
+  .track-reco-info { flex: 1; min-width: 0; }
+  .track-reco-name   { font-size: 14px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .track-reco-artist { font-size: 12px; color: var(--text-dim); margin-top: 2px; }
+  .track-reco-reason { font-size: 11px; color: var(--text-dim); margin-top: 2px; }
+
+  /* ── Scrollbar ──────────────────────────────────────────────────────────── */
+  ::-webkit-scrollbar { width: 6px; } ::-webkit-scrollbar-track { background: transparent; } ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  /* ── Notification ───────────────────────────────────────────────────────── */
+  #toast { position: fixed; bottom: 24px; right: 24px; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 18px; font-size: 13px; z-index: 999; opacity: 0; transform: translateY(10px); transition: all .3s; pointer-events: none; max-width: 280px; }
+  body.player-open #toast { bottom: 88px; }
+  #toast.show { opacity: 1; transform: translateY(0); }
+  #toast.success { border-color: var(--accent); color: var(--accent); }
+  #toast.error { border-color: var(--danger); color: var(--danger); }
+
+  .section-gap { margin-top: 24px; }
+  .import-btn-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+</style>
+</head>
+<body>
+
+<!-- ── Auth Screen ─────────────────────────────────────────────────────────── -->
+<div id="auth-screen">
+  <div class="auth-box">
+    <div class="auth-logo">resonance</div>
+    <p class="auth-tagline" id="auth-tagline">Your music, your universe.</p>
+
+    <!-- Setup mode (aucun utilisateur en base) -->
+    <div id="form-setup" style="display:none">
+      <div style="padding:10px 14px;background:var(--accent)12;border:1px solid var(--accent)30;border-radius:8px;font-size:13px;color:var(--accent);margin-bottom:20px">
+        🎉 Première installation — créez le compte administrateur
+      </div>
+      <div class="form-group"><label>Nom d'utilisateur</label><input id="s-username" type="text" placeholder="admin" /></div>
+      <div class="form-group"><label>Email</label><input id="s-email" type="email" placeholder="admin@example.com" /></div>
+      <div class="form-group"><label>Mot de passe</label><input id="s-password" type="password" placeholder="8 caractères minimum" /></div>
+      <button class="btn btn-primary" onclick="doSetup()">Créer le compte admin</button>
+      <p class="error-msg" id="setup-error"></p>
+    </div>
+
+    <!-- Login mode normal -->
+    <div id="form-login-wrap">
+      <div id="form-login">
+        <div class="form-group"><label>Nom d'utilisateur</label><input id="l-username" type="text" placeholder="username" /></div>
+        <div class="form-group"><label>Mot de passe</label><input id="l-password" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()" /></div>
+        <button class="btn btn-primary" onclick="doLogin()">Se connecter</button>
+        <p class="error-msg" id="login-error"></p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Main App ────────────────────────────────────────────────────────────── -->
+<div id="app" style="display:none">
+  <!-- Sidebar -->
+  <nav id="sidebar">
+    <div class="sidebar-logo">resonance</div>
+
+    <div class="nav-section">
+      <div class="nav-label">Explorer</div>
+      <div class="nav-item active" onclick="navigate('search')"><span class="icon">🔍</span>Recherche</div>
+      <div class="nav-item" onclick="navigate('feed')"><span class="icon">🆕</span>Nouveautés</div>
+      <div class="nav-item" onclick="navigate('recommendations')"><span class="icon">✨</span>Recommandations</div>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-label">Ma bibliothèque</div>
+      <div class="nav-item" onclick="navigate('following')"><span class="icon">❤️</span>Artistes suivis</div>
+      <div class="nav-item" onclick="navigate('settings')"><span class="icon">⚙️</span>Paramètres<span class="nav-badge" id="settings-badge" style="display:none"></span></div>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-label">Sources</div>
+      <div class="nav-item" id="tidal-nav-item" onclick="navigate('tidal-search')"><span class="icon">🌊</span>Tidal<span id="tidal-nav-status" style="margin-left:auto;font-size:10px;color:var(--text-dim)">non lié</span></div>
+    </div>
+
+    <div class="sidebar-bottom">
+      <div class="user-chip">
+        <div class="user-avatar" id="user-avatar-text">?</div>
+        <div class="user-info">
+          <div class="user-name" id="sidebar-username">...</div>
+          <div class="user-lastfm" id="sidebar-lastfm">Last.fm non lié</div>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main content -->
+  <div id="main">
+    <!-- API key warning banner -->
+    <div id="apikey-banner" onclick="navigate('settings')">
+      <span>⚠️</span>
+      <span>Clé API Last.fm non configurée — la recherche et les recommandations sont désactivées. <strong>Configurer →</strong></span>
+    </div>
+
+    <!-- Search -->
+    <div class="page active" id="page-search">
+      <div class="page-header">
+        <div class="page-title">Recherche</div>
+        <div class="page-subtitle">Artistes, morceaux, albums</div>
+      </div>
+      <div class="search-bar-wrap" style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px">
+        <input class="search-input" id="search-input" type="text" placeholder="Chercher un artiste, un titre…" oninput="debounceSearch()" onkeydown="if(event.key==='Enter'){clearTimeout(_searchTimer);doSearch()}" style="width:100%" />
+        <button class="btn btn-primary search-btn" onclick="doSearch()" style="width:auto;align-self:flex-start;padding:10px 28px">Chercher</button>
+      </div>
+      <div class="search-type-tabs">
+        <button class="stab active" onclick="setSearchType('artists', this)">Artistes</button>
+        <button class="stab" onclick="setSearchType('tracks', this)">Morceaux</button>
+        <button class="stab" onclick="setSearchType('releases', this)">Albums</button>
+      </div>
+      <div id="search-results"></div>
+    </div>
+
+    <!-- Feed -->
+    <div class="page" id="page-feed">
+      <div class="page-header">
+        <div class="page-title">Nouveautés</div>
+        <div class="page-subtitle">Dernières sorties de vos artistes suivis</div>
+      </div>
+      <div id="feed-results"><div class="loading"><div class="spinner"></div></div></div>
+    </div>
+
+    <!-- Recommendations -->
+    <div class="page" id="page-recommendations">
+      <div class="page-header">
+        <div class="page-title">Recommandations</div>
+        <div class="page-subtitle">Découvrez de nouveaux artistes et morceaux</div>
+      </div>
+      <div class="search-type-tabs" style="margin-bottom:20px">
+        <button class="stab active" id="reco-tab-artists" onclick="switchRecoTab('artists', this)">🎤 Artistes</button>
+        <button class="stab" id="reco-tab-tracks" onclick="switchRecoTab('tracks', this)">🎵 Morceaux</button>
+      </div>
+      <div id="reco-results"></div>
+    </div>
+
+    <!-- Tidal Search -->
+    <div class="page" id="page-tidal-search">
+      <div class="page-header">
+        <div class="page-title">🌊 Tidal</div>
+        <div class="page-subtitle" id="tidal-page-subtitle">Recherche et lecture haute qualité</div>
+      </div>
+      <div id="tidal-connect-prompt" style="display:none">
+        <div class="empty">
+          <div class="empty-icon">🌊</div>
+          <div class="empty-title">Tidal non connecté</div>
+          <p style="margin-bottom:20px">Connectez votre compte Tidal pour accéder à la musique en qualité FLAC.</p>
+          <button class="btn btn-primary" style="width:auto" onclick="navigate('settings');setTimeout(()=>document.getElementById('tidal-settings').scrollIntoView({behavior:'smooth'}),300)">
+            Connecter Tidal →
+          </button>
+        </div>
+      </div>
+      <div id="tidal-search-ui" style="display:none">
+        <div class="search-bar-wrap" style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px">
+          <input class="search-input" id="tidal-search-input" type="text" placeholder="Chercher sur Tidal…"
+            oninput="debounceTidalSearch()" onkeydown="if(event.key==='Enter'){clearTimeout(_tidalTimer);doTidalSearch()}" style="width:100%" />
+          <button class="btn btn-primary search-btn" onclick="doTidalSearch()" style="width:auto;align-self:flex-start;padding:10px 28px">Chercher</button>
+        </div>
+        <div class="search-type-tabs">
+          <button class="stab active" onclick="setTidalType('tracks',this)">🎵 Morceaux</button>
+          <button class="stab" onclick="setTidalType('artists',this)">🎤 Artistes</button>
+          <button class="stab" onclick="setTidalType('albums',this)">💿 Albums</button>
+        </div>
+        <div id="tidal-results"></div>
+      </div>
+    </div>
+
+    <!-- Following -->
+    <div class="page" id="page-following">
+      <div class="page-header" style="display:flex;align-items:center;justify-content:space-between">
+        <div>
+          <div class="page-title">Artistes suivis</div>
+          <div class="page-subtitle" id="following-count">Chargement…</div>
+        </div>
+        <div id="import-btn-container"></div>
+      </div>
+      <div id="following-results"></div>
+    </div>
+
+    <!-- Settings -->
+    <div class="page" id="page-settings">
+      <div class="page-header">
+        <div class="page-title">Paramètres</div>
+        <div class="page-subtitle">Configuration de votre compte et de vos clés API</div>
+      </div>
+
+      <!-- Compte -->
+      <div class="settings-section">
+        <h3>Mon compte</h3>
+        <p style="font-size:13px;color:var(--text-dim);margin-bottom:16px">
+          Connecté en tant que <strong id="settings-username" style="color:var(--text)">...</strong>
+        </p>
+        <button class="btn btn-ghost btn-sm" onclick="doLogout()">Se déconnecter</button>
+      </div>
+
+      <!-- Last.fm -->
+      <div class="settings-section">
+        <h3>🎵 Intégration Last.fm</h3>
+
+        <!-- Status badge -->
+        <div id="lfm-status-bar" style="margin-bottom:18px"></div>
+
+        <!-- How to get keys -->
+        <details style="margin-bottom:18px">
+          <summary style="font-size:12px;color:var(--text-dim);cursor:pointer;user-select:none">
+            Comment obtenir mes clés API Last.fm ?
+          </summary>
+          <div style="margin-top:10px;padding:14px;background:var(--surface);border-radius:8px;font-size:12px;line-height:1.8;color:var(--text-dim)">
+            <strong style="color:var(--text)">Étape 1 :</strong> Créez un compte sur <a href="https://www.last.fm" target="_blank" style="color:var(--accent)">last.fm</a><br/>
+            <strong style="color:var(--text)">Étape 2 :</strong> Rendez-vous sur <a href="https://www.last.fm/api/account/create" target="_blank" style="color:var(--accent)">last.fm/api/account/create</a><br/>
+            <strong style="color:var(--text)">Étape 3 :</strong> Remplissez le formulaire (nom de l'app = "Resonance", URL = localhost)<br/>
+            <strong style="color:var(--text)">Étape 4 :</strong> Copiez votre <em>API key</em> et votre <em>Shared secret</em> ci-dessous<br/>
+            <br/>
+            <em>La clé API est <strong style="color:var(--text)">gratuite</strong> et sans limite raisonnable d'utilisation.</em>
+          </div>
+        </details>
+
+        <!-- Form -->
+        <div id="lfm-form">
+          <div class="form-group">
+            <label>Nom d'utilisateur Last.fm</label>
+            <input id="lfm-username-input" type="text" placeholder="votre_pseudo_lastfm" autocomplete="off" />
+          </div>
+          <div class="form-group">
+            <label>API Key <span style="color:var(--text-dim);font-size:10px;text-transform:none;letter-spacing:0">(32 caractères)</span></label>
+            <input id="lfm-api-key-input" type="text" placeholder="a1b2c3d4e5f6..." autocomplete="off" spellcheck="false" style="font-family:monospace;font-size:13px;letter-spacing:.05em" />
+          </div>
+          <div class="form-group">
+            <label>Shared Secret <span style="color:var(--text-dim);font-size:10px;text-transform:none;letter-spacing:0">(facultatif mais recommandé)</span></label>
+            <div style="position:relative">
+              <input id="lfm-api-secret-input" type="password" placeholder="••••••••••••••••" autocomplete="new-password" spellcheck="false" style="font-family:monospace;font-size:13px;letter-spacing:.05em;padding-right:42px" />
+              <button onclick="toggleSecretVisibility()" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:16px;color:var(--text-dim)" id="secret-eye">👁</button>
+            </div>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+            <button class="btn btn-accent2 btn-sm" onclick="linkLastfm()">
+              Vérifier &amp; enregistrer
+            </button>
+            <span id="lfm-save-status" style="font-size:12px;color:var(--text-dim)"></span>
+          </div>
+          <p class="error-msg" id="lfm-error" style="text-align:left;margin-top:10px"></p>
+        </div>
+
+        <!-- Unlink -->
+        <div id="lfm-unlink-bar" style="display:none;margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
+          <button class="btn btn-danger btn-sm" onclick="unlinkLastfm()">Supprimer la liaison Last.fm</button>
+          <p style="font-size:11px;color:var(--text-dim);margin-top:6px">Cela supprime également vos clés API enregistrées.</p>
+        </div>
+      </div>
+
+      <!-- Tidal (admin seulement) -->
+      <div class="settings-section" id="tidal-settings" style="display:none">
+        <h3>🌊 Connexion Tidal <span style="font-size:11px;background:var(--accent)20;color:var(--accent);padding:2px 8px;border-radius:4px;margin-left:8px">Admin</span></h3>
+        <div id="tidal-status-bar" style="margin-bottom:16px"></div>
+        <div id="tidal-auth-ui">
+          <p style="font-size:13px;color:var(--text-dim);margin-bottom:16px;line-height:1.7">
+            Le compte Tidal est <strong style="color:var(--text)">partagé entre tous les utilisateurs</strong>.
+            Connectez le compte Tidal de l'instance ici.
+          </p>
+          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+            <button class="btn btn-sm" style="background:#00FECC;color:#000;font-weight:600" onclick="startTidalAuth()">
+              🌊 Connecter Tidal
+            </button>
+            <span id="tidal-auth-status" style="font-size:12px;color:var(--text-dim)"></span>
+          </div>
+          <p class="error-msg" id="tidal-error" style="text-align:left;margin-top:10px"></p>
+        </div>
+        <div id="tidal-quality-ui" style="display:none;margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
+          <label style="display:block;font-size:12px;font-weight:500;color:var(--text-dim);margin-bottom:8px;text-transform:uppercase;letter-spacing:.05em">Qualité audio</label>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="stab" id="q-LOW"      onclick="setTidalQuality('LOW')">96 kbps</button>
+            <button class="stab" id="q-HIGH"     onclick="setTidalQuality('HIGH')">320 kbps</button>
+            <button class="stab active" id="q-LOSSLESS" onclick="setTidalQuality('LOSSLESS')">FLAC</button>
+            <button class="stab" id="q-HI_RES"   onclick="setTidalQuality('HI_RES')">Hi-Res</button>
+          </div>
+          <div style="margin-top:16px">
+            <button class="btn btn-danger btn-sm" onclick="unlinkTidal()">Déconnecter Tidal</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Panel Admin -->
+      <div class="settings-section" id="admin-panel" style="display:none">
+        <h3>👥 Gestion des utilisateurs <span style="font-size:11px;background:var(--accent)20;color:var(--accent);padding:2px 8px;border-radius:4px;margin-left:8px">Admin</span></h3>
+
+        <!-- Créer un utilisateur -->
+        <div style="margin-bottom:20px">
+          <div style="font-size:13px;font-weight:600;margin-bottom:12px;color:var(--text)">Créer un utilisateur</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+            <div class="form-group" style="margin:0"><label>Nom d'utilisateur</label><input id="nu-username" type="text" placeholder="username" /></div>
+            <div class="form-group" style="margin:0"><label>Email</label><input id="nu-email" type="email" placeholder="user@example.com" /></div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr auto;gap:10px;align-items:end">
+            <div class="form-group" style="margin:0"><label>Mot de passe</label><input id="nu-password" type="password" placeholder="••••••••" /></div>
+            <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-dim);text-transform:none;letter-spacing:0;cursor:pointer;margin-bottom:6px">
+              <input type="checkbox" id="nu-is-admin" style="width:auto" /> Admin
+            </label>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;margin-top:8px">
+            <button class="btn btn-ghost btn-sm" onclick="adminCreateUser()">Créer</button>
+            <span id="nu-status" style="font-size:12px;color:var(--text-dim)"></span>
+          </div>
+          <p class="error-msg" id="nu-error" style="text-align:left;margin-top:8px"></p>
+        </div>
+
+        <!-- Liste des utilisateurs -->
+        <div>
+          <div style="font-size:13px;font-weight:600;margin-bottom:12px;color:var(--text)">Utilisateurs</div>
+          <div id="admin-users-list"><div class="loading"><div class="spinner"></div></div></div>
+        </div>
+      </div>
+
+      <!-- Mot de passe -->
+      <div class="settings-section">
+        <h3>🔒 Changer le mot de passe</h3>
+        <div class="form-group">
+          <label>Mot de passe actuel</label>
+          <input id="pw-current" type="password" placeholder="••••••••" autocomplete="current-password" />
+        </div>
+        <div class="form-group">
+          <label>Nouveau mot de passe</label>
+          <input id="pw-new" type="password" placeholder="8 caractères minimum" autocomplete="new-password"
+            oninput="checkPwStrength(this.value)" />
+          <div class="pw-strength-bar" id="pw-strength-bar"></div>
+          <div class="pw-strength-label" id="pw-strength-label"></div>
+        </div>
+        <div class="form-group">
+          <label>Confirmer le nouveau mot de passe</label>
+          <input id="pw-confirm" type="password" placeholder="••••••••" autocomplete="new-password" />
+        </div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <button class="btn btn-ghost btn-sm" onclick="changePassword()">Mettre à jour</button>
+          <span id="pw-status" style="font-size:12px"></span>
+        </div>
+        <p class="error-msg" id="pw-error" style="text-align:left;margin-top:8px"></p>
+      </div>
+
+      <!-- Info -->
+      <div class="settings-section" style="border-color:var(--accent)20;background:var(--accent)05">
+        <h3 style="color:var(--accent)">ℹ️ Confidentialité des clés API</h3>
+        <p style="font-size:13px;color:var(--text-dim);line-height:1.7">
+          Vos clés API sont stockées <strong style="color:var(--text)">chiffrées dans la base de données locale</strong> de cette instance.
+          Elles ne sont jamais exposées dans les réponses API ni partagées avec d'autres utilisateurs.
+          Chaque utilisateur dispose de ses propres clés.
+        </p>
+      </div>
+    </div>
+
+  </div><!-- /main -->
+
+  <!-- ── Music Player (HTML5 Audio) ───────────────────────────────────────── -->
+  <div id="player-bar">
+    <div id="player-thumb">🎵</div>
+    <div id="player-info">
+      <div id="player-track">—</div>
+      <div id="player-artist">—</div>
+    </div>
+
+    <div id="player-controls">
+      <button class="pctrl" title="Précédent" onclick="playerPrev()">⏮</button>
+      <button class="pctrl play-pause" id="btn-playpause" title="Lecture/Pause" onclick="playerToggle()">▶</button>
+      <button class="pctrl" title="Suivant" onclick="playerNext()">⏭</button>
+    </div>
+
+    <div id="player-progress-wrap">
+      <div id="player-time"><span id="pt-cur">0:00</span><span id="pt-dur">0:00</span></div>
+      <div id="player-progress-bar" onclick="playerSeek(event)">
+        <div id="player-progress-fill"></div>
+      </div>
+    </div>
+
+    <div id="player-volume-wrap">
+      <span id="player-vol-icon" onclick="playerMute()">🔊</span>
+      <input type="range" id="player-volume" min="0" max="100" value="80" oninput="playerVolume(this.value)" />
+    </div>
+
+    <span id="player-quality-badge" style="font-size:10px;padding:2px 7px;border-radius:4px;background:#00FECC20;color:#00FECC;display:none"></span>
+    <button id="player-close" onclick="closePlayer()" title="Fermer">✕</button>
+  </div>
+
+  <!-- HTML5 Audio element -->
+  <audio id="html5-audio" preload="auto" crossorigin="anonymous"></audio>
+
+</div><!-- /app -->
+
+<!-- Artist Modal -->
+<div id="modal-overlay" onclick="closeModal(event)">
+  <div id="modal-box">
+    <div id="modal-content"></div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ── State ────────────────────────────────────────────────────────────────────
+const API = '';
+let token = localStorage.getItem('token') || null;
+let currentUser = null;
+let searchType = 'artists';
+let followedSet = new Set();
+let _searchTimer = null;
+
+// ── Helpers ──────────────────────────────────────────────────────────────────
+async function apiFetch(path, opts = {}) {
+  const headers = {
+    'Content-Type': 'application/json',
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...(opts.headers || {})
+  };
+
+  let r;
+  try {
+    r = await fetch(API + path, { ...opts, headers });
+  } catch (networkErr) {
+    throw new Error('Impossible de contacter le serveur — vérifiez que Docker tourne.');
+  }
+
+  // Try to parse JSON regardless of status
+  const text = await r.text();
+  let data = null;
+  try {
+    data = JSON.parse(text);
+  } catch (_) {
+    // Response wasn't JSON (HTML error page, empty body, etc.)
+    if (!r.ok) {
+      throw new Error(`Erreur serveur (${r.status}) — réponse non-JSON`);
+    }
+    return null;  // 204 No Content or similar
+  }
+
+  if (!r.ok) {
+    const msg = data?.detail
+      || (Array.isArray(data?.detail) ? data.detail.map(d => d.msg).join(', ') : null)
+      || `Erreur ${r.status}`;
+    throw new Error(msg);
+  }
+
+  return data;
+}
+
+function toast(msg, type = 'success') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = `show ${type}`;
+  setTimeout(() => el.className = '', 2800);
+}
+
+function fmt(n) {
+  if (!n) return '';
+  const num = parseInt(n);
+  if (num > 1e6) return (num/1e6).toFixed(1) + 'M';
+  if (num > 1e3) return (num/1e3).toFixed(1) + 'K';
+  return num.toString();
+}
+
+function fmtDate(d) {
+  if (!d) return '';
+  return d.slice(0, 4);
+}
+
+function imgOrPlaceholder(src, emoji = '🎵') {
+  if (src && src !== 'https://lastfm.freetls.fastly.net/i/u/300x300/2a96cbd8b46e442fc41c2b86b821562f.png') {
+    return `<img class="artist-card-img" src="${src}" onerror="this.style.display='none'" />`;
+  }
+  return `<div class="artist-card-img-placeholder">${emoji}</div>`;
+}
+
+function circleImg(src, size = 48, emoji = '🎤') {
+  if (src && src !== 'https://lastfm.freetls.fastly.net/i/u/300x300/2a96cbd8b46e442fc41c2b86b821562f.png') {
+    return `<img class="following-img" style="width:${size}px;height:${size}px" src="${src}" onerror="this.parentNode.innerHTML='<div class=following-img style=width:${size}px;height:${size}px;font-size:22px;display:flex;align-items:center;justify-content:center>${emoji}</div>'" />`;
+  }
+  return `<div class="following-img" style="width:${size}px;height:${size}px;font-size:${size/2}px;display:flex;align-items:center;justify-content:center">${emoji}</div>`;
+}
+
+// ── Auth ─────────────────────────────────────────────────────────────────────
+async function checkSetup() {
+  try {
+    const data = await apiFetch('/api/auth/setup-needed');
+    if (data && data.setup_needed) {
+      document.getElementById('form-login-wrap').style.display = 'none';
+      document.getElementById('form-setup').style.display = 'block';
+      document.getElementById('auth-tagline').textContent = 'Configuration initiale';
+    } else {
+      document.getElementById('form-login-wrap').style.display = 'block';
+      document.getElementById('form-setup').style.display = 'none';
+    }
+  } catch(e) {}
+}
+
+async function doSetup() {
+  const username = document.getElementById('s-username').value.trim();
+  const email    = document.getElementById('s-email').value.trim();
+  const password = document.getElementById('s-password').value;
+  const errEl    = document.getElementById('setup-error');
+  errEl.textContent = '';
+  if (!username || !email || !password) { errEl.textContent = 'Tous les champs sont requis.'; return; }
+  if (password.length < 8) { errEl.textContent = 'Mot de passe trop court (8 min).'; return; }
+  try {
+    await apiFetch('/api/auth/register', { method: 'POST', body: JSON.stringify({ username, email, password }) });
+    toast('Compte admin créé ! Connectez-vous.');
+    document.getElementById('form-setup').style.display = 'none';
+    document.getElementById('form-login-wrap').style.display = 'block';
+    document.getElementById('l-username').value = username;
+  } catch(e) { errEl.textContent = e.message; }
+}
+
+async function doLogin() {
+  const username = document.getElementById('l-username').value.trim();
+  const password = document.getElementById('l-password').value;
+  const errEl    = document.getElementById('login-error');
+  errEl.textContent = '';
+  try {
+    const form = new URLSearchParams({ username, password });
+    const r = await fetch(API + '/api/auth/login', { method: 'POST', body: form });
+    if (!r.ok) { const e = await r.json(); throw new Error(e.detail); }
+    const data = await r.json();
+    token = data.access_token;
+    localStorage.setItem('token', token);
+    await initApp();
+  } catch(e) { errEl.textContent = e.message; }
+}
+
+function doLogout() {
+  localStorage.removeItem('token');
+  token = null; currentUser = null;
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('auth-screen').style.display = 'flex';
+}
+
+// ── Init ─────────────────────────────────────────────────────────────────────
+async function initApp() {
+  try {
+    currentUser = await apiFetch('/api/auth/me');
+    document.getElementById('auth-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'flex';
+    document.getElementById('sidebar-username').textContent = currentUser.username;
+    document.getElementById('user-avatar-text').textContent = currentUser.username[0].toUpperCase();
+    document.getElementById('settings-username').textContent = currentUser.username;
+
+    // Sections admin
+    if (currentUser.is_admin) {
+      document.getElementById('tidal-settings').style.display = 'block';
+      document.getElementById('admin-panel').style.display = 'block';
+      loadAdminUsers();
+    } else {
+      document.getElementById('tidal-settings').style.display = 'none';
+      document.getElementById('admin-panel').style.display = 'none';
+    }
+
+    updateLastfmUI();
+    updateBannerAndBadge();
+    await loadFollowedSet();
+    await loadTidalStatus();
+    navigate('search');
+  } catch (e) { doLogout(); }
+}
+
+function updateLastfmUI() {
+  const statusBar = document.getElementById('lfm-status-bar');
+  const unlinkBar = document.getElementById('lfm-unlink-bar');
+
+  if (currentUser.lastfm_username && currentUser.has_lastfm_api_key) {
+    // Connected state
+    statusBar.innerHTML = `
+      <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--accent)10;border:1px solid var(--accent)30;border-radius:8px">
+        <span style="width:8px;height:8px;border-radius:50%;background:var(--accent);display:inline-block;flex-shrink:0"></span>
+        <div>
+          <div style="font-size:13px;font-weight:600;color:var(--accent)">Connecté à Last.fm</div>
+          <div style="font-size:12px;color:var(--text-dim)">Compte : <strong style="color:var(--text)">${currentUser.lastfm_username}</strong> · Clé API enregistrée ✓</div>
+        </div>
+      </div>`;
+    document.getElementById('lfm-username-input').value = currentUser.lastfm_username;
+    unlinkBar.style.display = 'block';
+    document.getElementById('sidebar-lastfm').textContent = '♪ ' + currentUser.lastfm_username;
+  } else if (currentUser.lastfm_username) {
+    statusBar.innerHTML = `
+      <div style="padding:10px 14px;background:#ff9a0020;border:1px solid #ff9a0040;border-radius:8px;font-size:13px;color:#ff9a00">
+        ⚠️ Compte lié mais <strong>clé API manquante</strong> — renseignez-la ci-dessous.
+      </div>`;
+    document.getElementById('lfm-username-input').value = currentUser.lastfm_username;
+    unlinkBar.style.display = 'block';
+  } else {
+    statusBar.innerHTML = `
+      <div style="padding:10px 14px;background:var(--surface);border:1px dashed var(--border);border-radius:8px;font-size:13px;color:var(--text-dim)">
+        Aucun compte Last.fm configuré — renseignez vos informations ci-dessous.
+      </div>`;
+    unlinkBar.style.display = 'none';
+  }
+}
+
+async function loadFollowedSet() {
+  try {
+    const list = await apiFetch('/api/artists/following');
+    followedSet = new Set(list.map(a => a.artist_name.toLowerCase()));
+  } catch (e) {}
+}
+
+// ── Navigation ────────────────────────────────────────────────────────────────
+function navigate(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const pageEl = document.getElementById('page-' + page);
+  if (pageEl) pageEl.classList.add('active');
+  const navItems = document.querySelectorAll('.nav-item');
+  const map = { search: 0, feed: 1, recommendations: 2, following: 3, settings: 4, 'tidal-search': 5 };
+  if (map[page] !== undefined && navItems[map[page]]) navItems[map[page]].classList.add('active');
+
+  if (page === 'feed') loadFeed();
+  if (page === 'recommendations') loadRecommendations();
+  if (page === 'following') loadFollowing();
+  if (page === 'tidal-search') {
+    if (tidalStatus.connected) {
+      document.getElementById('tidal-connect-prompt').style.display = 'none';
+      document.getElementById('tidal-search-ui').style.display = 'block';
+    } else {
+      document.getElementById('tidal-connect-prompt').style.display = 'block';
+      document.getElementById('tidal-search-ui').style.display = 'none';
+    }
+  }
+}
+
+// ── Search ────────────────────────────────────────────────────────────────────
+function setSearchType(type, el) {
+  searchType = type;
+  document.querySelectorAll('.stab').forEach(s => s.classList.remove('active'));
+  el.classList.add('active');
+  const q = document.getElementById('search-input').value.trim();
+  if (q) doSearch();
+}
+
+async function doSearch() {
+  const q = document.getElementById('search-input').value.trim();
+  if (!q) return;
+  const el = document.getElementById('search-results');
+  el.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+
+  if (typeof tidalStatus !== 'undefined' && tidalStatus.connected) {
+    try {
+      const tidalTypeMap = { 'artists': 'artists', 'tracks': 'tracks', 'releases': 'albums' };
+      const tType = tidalTypeMap[searchType] || 'tracks';
+      const data = await apiFetch(`/api/tidal/search?q=${encodeURIComponent(q)}&type=${tType}&limit=20`);
+      renderTidalResults(data, tType, el);
+    } catch (e) { el.innerHTML = `<div class="empty"><div class="empty-icon">😕</div>${e.message}</div>`; }
+    return;
+  }
+
+  try {
+    const data = await apiFetch(`/api/search/${searchType}?q=${encodeURIComponent(q)}`);
+    renderSearchResults(data);
+  } catch (e) { el.innerHTML = `<div class="empty"><div class="empty-icon">😕</div>${e.message}</div>`; }
+}
+
+function renderSearchResults(data) {
+  const el = document.getElementById('search-results');
+  if (!data.length) { el.innerHTML = '<div class="empty"><div class="empty-icon">🔍</div><div class="empty-title">Aucun résultat</div></div>'; return; }
+
+  if (searchType === 'artists') {
+    el.innerHTML = `<div class="card-grid">${data.map(a => artistCard(a)).join('')}</div>`;
+  } else if (searchType === 'tracks') {
+    el.innerHTML = `<div class="card-list">${data.map(t => `
+      <div class="track-row">
+        ${t.image ? `<img class="track-row-img" src="${t.image}" onerror="this.style.display='none'" />` : '<div class="track-row-img" style="display:flex;align-items:center;justify-content:center">🎵</div>'}
+        <div class="track-row-info">
+          <div class="track-row-name">${esc(t.name)}</div>
+          <div class="track-row-artist">${esc(t.artist)}</div>
+        </div>
+        ${t.listeners ? `<span class="badge">${fmt(t.listeners)} écouteurs</span>` : ''}
+        <button class="play-btn" title="Écouter sur YouTube"
+          onclick="playTrack('${esc(t.name).replace(/'/g,"\\'")}','${esc(t.artist).replace(/'/g,"\\'")}','${esc(t.image||'')}')">▶</button>
+      </div>`).join('')}</div>`;
+  } else {
+    el.innerHTML = `<div class="card-list">${data.map(r => `
+      <div class="release-card">
+        <div class="release-card-img">💿</div>
+        <div class="release-card-info">
+          <div class="release-card-title">${r.title}</div>
+          <div class="release-card-artist">${r.artist || ''}</div>
+          <div class="release-card-meta">${r.date ? `<span class="badge">${r.date}</span>` : ''}${r.status ? `<span class="badge">${r.status}</span>` : ''}</div>
+        </div>
+      </div>`).join('')}</div>`;
+  }
+}
+
+function esc(str) {
+  return String(str || '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function artistCard(a) {
+  const isFollowed = followedSet.has(a.name.toLowerCase());
+  const id = 'ac-' + Math.random().toString(36).slice(2);
+  return `
+    <div class="artist-card" id="${id}"
+      data-name="${esc(a.name)}" data-mbid="${esc(a.mbid||'')}"
+      data-image="${esc(a.image||'')}" data-url="${esc(a.url||'')}">
+      ${a.image
+        ? `<img class="artist-card-img" src="${esc(a.image)}" alt="${esc(a.name)}" onerror="this.outerHTML='<div class=artist-card-img-placeholder>🎤</div>'" />`
+        : '<div class="artist-card-img-placeholder">🎤</div>'}
+      <div class="artist-card-body artist-card-clickable" style="cursor:pointer">
+        <div class="artist-card-name">${esc(a.name)}</div>
+        ${a.listeners ? `<div class="artist-card-meta">${fmt(a.listeners)} écouteurs</div>` : ''}
+        ${a.reason    ? `<div class="reco-reason">${esc(a.reason)}</div>` : ''}
+      </div>
+      <div class="artist-card-footer">
+        <button class="btn btn-sm artist-follow-btn ${isFollowed ? 'btn-danger' : 'btn-ghost'}" style="flex:1">
+          ${isFollowed ? '✓ Suivi' : '+ Suivre'}
+        </button>
+      </div>
+    </div>`;
+}
+
+// Delegate artist card clicks
+document.addEventListener('click', e => {
+  const card = e.target.closest('.artist-card');
+  if (!card) return;
+  const { name, mbid, image, url } = card.dataset;
+  if (e.target.closest('.artist-follow-btn')) {
+    toggleFollow(name, mbid, image, url, e.target.closest('.artist-follow-btn'));
+  } else if (e.target.closest('.artist-card-clickable')) {
+    openArtistModal(name, mbid, image, url);
+  }
+});
+
+// ── Follow ────────────────────────────────────────────────────────────────────
+async function toggleFollow(name, mbid, image, url, btn) {
+  const isFollowed = followedSet.has(name.toLowerCase());
+  btn.disabled = true;
+  try {
+    if (isFollowed) {
+      await apiFetch(`/api/artists/unfollow/${encodeURIComponent(name)}`, { method: 'DELETE' });
+      followedSet.delete(name.toLowerCase());
+      btn.textContent = '+ Suivre';
+      btn.className = 'btn btn-sm artist-follow-btn btn-ghost';
+      toast(`Désabonné de ${name}`);
+    } else {
+      await apiFetch('/api/artists/follow', { method: 'POST', body: JSON.stringify({
+        artist_name: name, artist_mbid: mbid || null, artist_lastfm_url: url || null, artist_image: image || null
+      })});
+      followedSet.add(name.toLowerCase());
+      btn.textContent = '✓ Suivi';
+      btn.className = 'btn btn-sm artist-follow-btn btn-danger';
+      toast(`Vous suivez maintenant ${name} !`);
+    }
+  } catch (e) { toast(e.message, 'error'); }
+  btn.disabled = false;
+}
+
+// ── Artist Modal ──────────────────────────────────────────────────────────────
+async function openArtistModal(name, mbid, image, url) {
+  const overlay = document.getElementById('modal-overlay');
+  document.getElementById('modal-content').innerHTML = '<div class="loading" style="padding:60px"><div class="spinner"></div></div>';
+  overlay.classList.add('open');
+  try {
+    const info = await apiFetch(`/api/search/artist/${encodeURIComponent(name)}`);
+    const isFollowed = followedSet.has(name.toLowerCase());
+    const img = info.image || image;
+    const bio = (info.bio || '').replace(/<a [^>]*>[^<]*<\/a>/gi, '').replace(/<[^>]*>/g,'').trim();
+
+    document.getElementById('modal-content').innerHTML = `
+      ${img ? `<img class="modal-header-img" src="${img}" onerror="this.style.display='none'" />` : '<div style="height:16px"></div>'}
+      <div class="modal-body">
+        <div class="modal-title">${info.name || name}</div>
+        <div class="modal-meta">${info.listeners ? fmt(info.listeners) + ' auditeurs' : ''} ${info.playcount ? '· ' + fmt(info.playcount) + ' écoutes' : ''}</div>
+        ${info.tags?.length ? `<div class="modal-section-title">Genres</div><div class="tag-list">${info.tags.map(t=>`<span class="tag">${t}</span>`).join('')}</div>` : ''}
+        ${bio ? `<div class="modal-bio">${bio.slice(0,400)}${bio.length>400?'…':''}</div>` : ''}
+        ${info.top_tracks?.length ? `
+          <div class="modal-section-title">Top morceaux</div>
+          ${info.top_tracks.map((t,i) => `
+            <div class="track-item">
+              <span class="track-num">${i+1}</span>
+              <span class="track-name" style="flex:1">${esc(t.name)}</span>
+              <span class="track-plays">${fmt(t.playcount)} écoutes</span>
+              <button class="play-btn" style="margin-left:10px;width:26px;height:26px;font-size:11px"
+                onclick="playTrack('${esc(t.name).replace(/'/g,"\\'")}','${esc(info.name||name).replace(/'/g,"\\'")}','')">▶</button>
+            </div>`).join('')}` : ''}
+        <div class="modal-actions">
+          <button class="btn ${isFollowed ? 'btn-danger' : 'btn-primary'} btn-sm" id="modal-follow-btn"
+            onclick="modalToggleFollow('${name.replace(/'/g,"\\'")}','${(mbid||info.mbid||'').replace(/'/g,"\\'")}','${(img||'').replace(/'/g,"\\'")}','${(url||info.url||'').replace(/'/g,"\\'")}')">
+            ${isFollowed ? '✓ Suivi' : '+ Suivre'}
+          </button>
+          ${url || info.url ? `<a href="${url||info.url}" target="_blank" class="btn btn-ghost btn-sm">Voir sur Last.fm ↗</a>` : ''}
+        </div>
+      </div>`;
+  } catch (e) {
+    document.getElementById('modal-content').innerHTML = `<div class="modal-body"><p style="color:var(--text-dim)">${e.message}</p></div>`;
+  }
+}
+
+async function modalToggleFollow(name, mbid, image, url) {
+  const btn = document.getElementById('modal-follow-btn');
+  const isFollowed = followedSet.has(name.toLowerCase());
+  btn.disabled = true;
+  try {
+    if (isFollowed) {
+      await apiFetch(`/api/artists/unfollow/${encodeURIComponent(name)}`, { method: 'DELETE' });
+      followedSet.delete(name.toLowerCase());
+      btn.textContent = '+ Suivre'; btn.className = 'btn btn-primary btn-sm';
+    } else {
+      await apiFetch('/api/artists/follow', { method: 'POST', body: JSON.stringify({
+        artist_name: name, artist_mbid: mbid || null, artist_lastfm_url: url || null, artist_image: image || null
+      })});
+      followedSet.add(name.toLowerCase());
+      btn.textContent = '✓ Suivi'; btn.className = 'btn btn-danger btn-sm';
+    }
+    toast(isFollowed ? `Désabonné de ${name}` : `Vous suivez ${name} !`);
+  } catch (e) { toast(e.message, 'error'); }
+  btn.disabled = false;
+}
+
+function closeModal(e) {
+  if (e.target === document.getElementById('modal-overlay')) {
+    document.getElementById('modal-overlay').classList.remove('open');
+  }
+}
+
+// ── Feed ──────────────────────────────────────────────────────────────────────
+async function loadFeed() {
+  const el = document.getElementById('feed-results');
+  el.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+  try {
+    const data = await apiFetch('/api/feed/releases?limit=3');
+    if (!data.length) {
+      el.innerHTML = '<div class="empty"><div class="empty-icon">🎵</div><div class="empty-title">Rien à afficher</div><p>Suivez des artistes avec un ID MusicBrainz pour voir leurs sorties.</p></div>';
+      return;
+    }
+    el.innerHTML = `<div class="card-list">${data.map(r => `
+      <div class="release-card">
+        ${r.artist_image ? `<img class="release-card-img" src="${r.artist_image}" style="object-fit:cover" onerror="this.outerHTML='<div class=release-card-img>🎵</div>'" />` : '<div class="release-card-img">🎵</div>'}
+        <div class="release-card-info">
+          <div class="release-card-title">${r.title}</div>
+          <div class="release-card-artist">${r.artist_name}</div>
+          <div class="release-card-meta">
+            ${r.type ? `<span class="badge">${r.type}</span>` : ''}
+            ${r.first_release_date ? `<span class="badge badge-accent">${fmtDate(r.first_release_date)}</span>` : ''}
+          </div>
+        </div>
+      </div>`).join('')}</div>`;
+  } catch (e) {
+    el.innerHTML = `<div class="empty"><div class="empty-icon">😕</div>${e.message}</div>`;
+  }
+}
+
+// ── Recommendations ───────────────────────────────────────────────────────────
+async function loadRecommendations() {
+  const el = document.getElementById('reco-results');
+  el.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+  try {
+    if (recoTab === 'artists') {
+      const data = await apiFetch('/api/recommendations/artists');
+      if (!data.length) {
+        el.innerHTML = '<div class="empty"><div class="empty-icon">🎤</div><div class="empty-title">Suivez des artistes d\'abord</div><p>Vos recommandations apparaîtront ici.</p></div>';
+        return;
+      }
+      el.innerHTML = `<div class="card-grid">${data.map(a => artistCard(a)).join('')}</div>`;
+
+    } else {
+      // Track recommendations
+      const data = await apiFetch('/api/recommendations/tracks');
+      if (!data.length) {
+        el.innerHTML = '<div class="empty"><div class="empty-icon">🎵</div><div class="empty-title">Suivez des artistes d\'abord</div><p>Les recommandations de morceaux se basent sur vos artistes suivis.</p></div>';
+        return;
+      }
+      el.innerHTML = `<div class="card-list">${data.map(t => trackRecoRow(t)).join('')}</div>`;
+    }
+  } catch (e) {
+    el.innerHTML = `<div class="empty"><div class="empty-icon">😕</div><p>${e.message}</p></div>`;
+  }
+}
+
+function trackRecoRow(t) {
+  return `
+    <div class="track-reco-row">
+      ${t.image
+        ? `<img class="track-reco-img" src="${esc(t.image)}" onerror="this.outerHTML='<div class=track-reco-img>🎵</div>'" />`
+        : '<div class="track-reco-img">🎵</div>'}
+      <div class="track-reco-info">
+        <div class="track-reco-name">${esc(t.name)}</div>
+        <div class="track-reco-artist">${esc(t.artist || '')}</div>
+        ${t.reason ? `<div class="track-reco-reason">${esc(t.reason)}</div>` : ''}
+      </div>
+      ${t.listeners ? `<span class="badge" style="flex-shrink:0">${fmt(t.listeners)}</span>` : ''}
+      <button class="play-btn" title="Écouter"
+        onclick="playTrack('${esc(t.name).replace(/'/g,"\\'")}','${esc(t.artist||'').replace(/'/g,"\\'")}','${esc(t.image||'')}')">▶</button>
+      <button class="btn btn-ghost btn-sm" style="flex-shrink:0"
+        onclick="addToQueue('${esc(t.name).replace(/'/g,"\\'")}','${esc(t.artist||'').replace(/'/g,"\\'")}','${esc(t.image||'')}')">+</button>
+    </div>`;
+}
+
+// ── Following ─────────────────────────────────────────────────────────────────
+async function loadFollowing() {
+  const el = document.getElementById('following-results');
+  el.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+  try {
+    const data = await apiFetch('/api/artists/following');
+    document.getElementById('following-count').textContent = `${data.length} artiste${data.length !== 1 ? 's' : ''} suivi${data.length !== 1 ? 's' : ''}`;
+
+    // Show import button only if lastfm linked
+    const importBtn = document.getElementById('import-btn-container');
+    if (currentUser.lastfm_username) {
+      importBtn.innerHTML = `<button class="btn btn-accent2 btn-sm" onclick="importFromLastfm()">⬇ Importer Last.fm</button>`;
+    }
+
+    if (!data.length) {
+      el.innerHTML = '<div class="empty"><div class="empty-icon">🎤</div><div class="empty-title">Aucun artiste suivi</div><p>Recherchez et suivez vos artistes préférés.</p></div>';
+      return;
+    }
+    el.innerHTML = `<div class="card-list">${data.map(a => `
+      <div class="following-row">
+        ${circleImg(a.artist_image)}
+        <div class="following-info">
+          <div class="following-name">${a.artist_name}</div>
+          <div class="following-date">Suivi depuis ${new Date(a.followed_at).toLocaleDateString('fr-FR')}</div>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="unfollowAndRefresh('${a.artist_name.replace(/'/g,"\\'")}')">Désabonner</button>
+      </div>`).join('')}</div>`;
+  } catch (e) {
+    el.innerHTML = `<div class="empty"><div class="empty-icon">😕</div>${e.message}</div>`;
+  }
+}
+
+async function unfollowAndRefresh(name) {
+  try {
+    await apiFetch(`/api/artists/unfollow/${encodeURIComponent(name)}`, { method: 'DELETE' });
+    followedSet.delete(name.toLowerCase());
+    toast(`Désabonné de ${name}`);
+    loadFollowing();
+  } catch (e) { toast(e.message, 'error'); }
+}
+
+async function importFromLastfm() {
+  try {
+    toast('Import en cours…');
+    const r = await apiFetch('/api/artists/import-lastfm', { method: 'POST' });
+    await loadFollowedSet();
+    toast(`${r.imported} artiste(s) importé(s) !`);
+    loadFollowing();
+  } catch (e) { toast(e.message, 'error'); }
+}
+
+// ── Settings ──────────────────────────────────────────────────────────────────
+function toggleSecretVisibility() {
+  const input = document.getElementById('lfm-api-secret-input');
+  const eye = document.getElementById('secret-eye');
+  if (input.type === 'password') { input.type = 'text'; eye.textContent = '🙈'; }
+  else { input.type = 'password'; eye.textContent = '👁'; }
+}
+
+async function linkLastfm() {
+  const username = document.getElementById('lfm-username-input').value.trim();
+  const apiKey = document.getElementById('lfm-api-key-input').value.trim();
+  const apiSecret = document.getElementById('lfm-api-secret-input').value.trim();
+  const errEl = document.getElementById('lfm-error');
+  const statusEl = document.getElementById('lfm-save-status');
+  errEl.textContent = '';
+  statusEl.textContent = 'Vérification en cours…';
+
+  if (!username || !apiKey) {
+    errEl.textContent = 'Le nom d\'utilisateur et la clé API sont requis.';
+    statusEl.textContent = '';
+    return;
+  }
+  if (apiKey.length < 20) {
+    errEl.textContent = 'La clé API semble incorrecte (trop courte).';
+    statusEl.textContent = '';
+    return;
+  }
+
+  try {
+    currentUser = await apiFetch('/api/auth/link-lastfm', {
+      method: 'POST',
+      body: JSON.stringify({ lastfm_username: username, lastfm_api_key: apiKey, lastfm_api_secret: apiSecret }),
+    });
+    // Clear sensitive fields from DOM after save
+    document.getElementById('lfm-api-key-input').value = '';
+    document.getElementById('lfm-api-secret-input').value = '';
+    statusEl.textContent = '';
+    updateLastfmUI();
+    updateBannerAndBadge();
+    toast('Clés API Last.fm enregistrées !');
+  } catch (e) {
+    errEl.textContent = e.message;
+    statusEl.textContent = '';
+  }
+}
+
+async function unlinkLastfm() {
+  if (!confirm('Supprimer la liaison Last.fm et vos clés API ?')) return;
+  try {
+    currentUser = await apiFetch('/api/auth/unlink-lastfm', { method: 'DELETE' });
+    document.getElementById('lfm-username-input').value = '';
+    document.getElementById('lfm-api-key-input').value = '';
+    document.getElementById('lfm-api-secret-input').value = '';
+    document.getElementById('sidebar-lastfm').textContent = 'Last.fm non lié';
+    updateLastfmUI();
+    updateBannerAndBadge();
+    toast('Compte Last.fm délié.');
+  } catch (e) { toast(e.message, 'error'); }
+}
+
+// ── Password ──────────────────────────────────────────────────────────────────
+function checkPwStrength(val) {
+  const bar = document.getElementById('pw-strength-bar');
+  const lbl = document.getElementById('pw-strength-label');
+  if (!val) { bar.className = 'pw-strength-bar'; lbl.textContent = ''; return; }
+  const strong = val.length >= 12 && /[A-Z]/.test(val) && /[0-9]/.test(val) && /[^A-Za-z0-9]/.test(val);
+  const medium = val.length >= 8 && (/[A-Z]/.test(val) || /[0-9]/.test(val));
+  if (strong)       { bar.className = 'pw-strength-bar strong'; lbl.textContent = '💪 Fort'; lbl.style.color = 'var(--accent)'; }
+  else if (medium)  { bar.className = 'pw-strength-bar medium'; lbl.textContent = '🔶 Moyen'; lbl.style.color = '#ff9a00'; }
+  else              { bar.className = 'pw-strength-bar weak';   lbl.textContent = '⚠️ Faible'; lbl.style.color = 'var(--danger)'; }
+}
+
+async function changePassword() {
+  const cur  = document.getElementById('pw-current').value;
+  const nw   = document.getElementById('pw-new').value;
+  const conf = document.getElementById('pw-confirm').value;
+  const errEl = document.getElementById('pw-error');
+  const statusEl = document.getElementById('pw-status');
+  errEl.textContent = ''; statusEl.textContent = '';
+
+  if (!cur || !nw || !conf) { errEl.textContent = 'Tous les champs sont requis.'; return; }
+  if (nw !== conf) { errEl.textContent = 'Les mots de passe ne correspondent pas.'; return; }
+  if (nw.length < 8) { errEl.textContent = 'Le nouveau mot de passe doit faire au moins 8 caractères.'; return; }
+
+  statusEl.textContent = 'Mise à jour…'; statusEl.style.color = 'var(--text-dim)';
+  try {
+    await apiFetch('/api/auth/change-password', {
+      method: 'POST',
+      body: JSON.stringify({ current_password: cur, new_password: nw }),
+    });
+    document.getElementById('pw-current').value = '';
+    document.getElementById('pw-new').value = '';
+    document.getElementById('pw-confirm').value = '';
+    document.getElementById('pw-strength-bar').className = 'pw-strength-bar';
+    document.getElementById('pw-strength-label').textContent = '';
+    statusEl.textContent = ''; 
+    toast('Mot de passe mis à jour !');
+  } catch (e) {
+    errEl.textContent = e.message;
+    statusEl.textContent = '';
+  }
+}
+
+// ── Debounce ──────────────────────────────────────────────────────────────────
+function debounceSearch() {
+  clearTimeout(_searchTimer);
+  const q = document.getElementById('search-input').value.trim();
+  if (!q) { document.getElementById('search-results').innerHTML = ''; return; }
+  _searchTimer = setTimeout(doSearch, 480);
+}
+
+// ── Banner + Badge ────────────────────────────────────────────────────────────
+function updateBannerAndBadge() {
+  const noKey = !currentUser.has_lastfm_api_key;
+  const banner = document.getElementById('apikey-banner');
+  const badge  = document.getElementById('settings-badge');
+  banner.classList.toggle('visible', noKey);
+  badge.style.display = noKey ? 'block' : 'none';
+}
+
+// ── HTML5 Audio Player (Tidal) ────────────────────────────────────────────────
+const audio = document.getElementById('html5-audio');
+let playerQueue   = [];   // [{name, artist, image, tidalId}]
+let playerIndex   = -1;
+let isMuted       = false;
+let tidalConnected = false;
+
+// Wire up HTML5 audio events
+audio.addEventListener('timeupdate', () => {
+  const cur = audio.currentTime, dur = audio.duration || 0;
+  if (dur > 0) {
+    document.getElementById('player-progress-fill').style.width = `${(cur/dur)*100}%`;
+    document.getElementById('pt-cur').textContent = fmtTime(cur);
+    document.getElementById('pt-dur').textContent = fmtTime(dur);
+  }
+});
+audio.addEventListener('loadedmetadata', () => {
+  document.getElementById('pt-dur').textContent = fmtTime(audio.duration);
+});
+audio.addEventListener('play',  () => { document.getElementById('btn-playpause').textContent = '⏸'; });
+audio.addEventListener('pause', () => { document.getElementById('btn-playpause').textContent = '▶'; });
+audio.addEventListener('ended', () => playerNext());
+audio.addEventListener('error', () => toast('Erreur de lecture — URL expirée ?', 'error'));
+audio.volume = 0.8;
+
+function fmtTime(s) {
+  if (!s || isNaN(s)) return '0:00';
+  const m = Math.floor(s / 60);
+  return `${m}:${Math.floor(s % 60).toString().padStart(2,'0')}`;
+}
+
+async function playTrack(trackName, artistName, imgSrc, tidalId = null) {
+  // Remove duplicate and push to front
+  playerQueue = playerQueue.filter(t => t.name !== trackName || t.artist !== artistName);
+  playerQueue.unshift({ name: trackName, artist: artistName, image: imgSrc || '', tidalId });
+  playerIndex = 0;
+  await _loadTrack(0);
+}
+
+async function _loadTrack(idx) {
+  if (idx < 0 || idx >= playerQueue.length) return;
+  playerIndex = idx;
+  const t = playerQueue[idx];
+
+  // Update info bar
+  document.getElementById('player-track').textContent  = t.name;
+  document.getElementById('player-artist').textContent = t.artist;
+  document.getElementById('player-thumb').innerHTML    = t.image
+    ? `<img src="${esc(t.image)}" />`
+    : '🎵';
+  document.getElementById('player-progress-fill').style.width = '0%';
+  document.getElementById('pt-cur').textContent = '0:00';
+  document.getElementById('pt-dur').textContent = '—';
+  document.getElementById('player-bar').classList.add('visible');
+  document.body.classList.add('player-open');
+
+  if (!t.tidalId) {
+    toast('Pas d\'ID Tidal — utilisez la recherche Tidal pour lire des morceaux.', 'error');
+    return;
+  }
+
+  // Show quality badge
+  const badge = document.getElementById('player-quality-badge');
+  badge.style.display = 'inline';
+  badge.textContent = 'FLAC';
+
+  document.getElementById('btn-playpause').textContent = '⏳';
+
+  try {
+    const data = await apiFetch(`/api/tidal/track/${t.tidalId}/stream`);
+    audio.src = data.url;
+    audio.load();
+    await audio.play();
+  } catch(e) {
+    toast(`Erreur : ${e.message}`, 'error');
+    document.getElementById('btn-playpause').textContent = '▶';
+  }
+}
+
+function playerToggle() {
+  if (!audio.src) return;
+  if (audio.paused) audio.play();
+  else audio.pause();
+}
+
+function playerNext() {
+  if (playerIndex < playerQueue.length - 1) _loadTrack(playerIndex + 1);
+}
+
+function playerPrev() {
+  if (audio.currentTime > 3) { audio.currentTime = 0; return; }
+  if (playerIndex > 0) _loadTrack(playerIndex - 1);
+}
+
+function playerSeek(e) {
+  if (!audio.duration) return;
+  const bar = document.getElementById('player-progress-bar');
+  audio.currentTime = (e.offsetX / bar.offsetWidth) * audio.duration;
+}
+
+function playerVolume(val) {
+  audio.volume = val / 100;
+  document.getElementById('player-vol-icon').textContent = val < 10 ? '🔇' : val < 50 ? '🔉' : '🔊';
+}
+
+function playerMute() {
+  audio.muted = !audio.muted;
+  isMuted = audio.muted;
+  document.getElementById('player-vol-icon').textContent = isMuted ? '🔇' : '🔊';
+}
+
+function closePlayer() {
+  audio.pause();
+  audio.src = '';
+  document.getElementById('player-bar').classList.remove('visible');
+  document.body.classList.remove('player-open');
+  playerQueue = [];
+  playerIndex = -1;
+  document.getElementById('player-quality-badge').style.display = 'none';
+}
+
+function addToQueue(trackName, artistName, imgSrc, tidalId = null) {
+  playerQueue.push({ name: trackName, artist: artistName, image: imgSrc || '', tidalId });
+  toast(`"${trackName}" ajouté à la file`);
+  if (!document.getElementById('player-bar').classList.contains('visible') && playerIndex < 0) {
+    _loadTrack(playerQueue.length - 1);
+  }
+}
+
+// ── Tidal Auth & Search ───────────────────────────────────────────────────────
+let _tidalTimer = null;
+let _tidalPollTimer = null;
+let tidalSearchType = 'tracks';
+let tidalStatus = { connected: false, quality: 'LOSSLESS' };
+
+async function loadTidalStatus() {
+  try {
+    tidalStatus = await apiFetch('/api/tidal/me');
+    tidalConnected = tidalStatus.connected;
+    updateTidalUI();
+  } catch(e) {}
+}
+
+function updateTidalUI() {
+  const statusBar = document.getElementById('tidal-status-bar');
+  const qualityUI = document.getElementById('tidal-quality-ui');
+  const navStatus = document.getElementById('tidal-nav-status');
+  const prompt    = document.getElementById('tidal-connect-prompt');
+  const searchUI  = document.getElementById('tidal-search-ui');
+
+  if (tidalStatus.connected) {
+    statusBar.innerHTML = `
+      <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:#00FECC10;border:1px solid #00FECC30;border-radius:8px">
+        <span style="width:8px;height:8px;border-radius:50%;background:#00FECC;display:inline-block;flex-shrink:0"></span>
+        <div>
+          <div style="font-size:13px;font-weight:600;color:#00FECC">Connecté à Tidal</div>
+          <div style="font-size:12px;color:var(--text-dim)">Qualité : <strong style="color:var(--text)">${tidalStatus.quality}</strong></div>
+        </div>
+      </div>`;
+    qualityUI.style.display = 'block';
+    navStatus.textContent = '✓';
+    navStatus.style.color = '#00FECC';
+    if (prompt) prompt.style.display = 'none';
+    if (searchUI) searchUI.style.display = 'block';
+
+    // Highlight active quality button
+    ['LOW','HIGH','LOSSLESS','HI_RES'].forEach(q => {
+      const btn = document.getElementById('q-'+q);
+      if (btn) btn.classList.toggle('active', q === tidalStatus.quality);
+    });
+  } else {
+    statusBar.innerHTML = `
+      <div style="padding:10px 14px;background:var(--surface);border:1px dashed var(--border);border-radius:8px;font-size:13px;color:var(--text-dim)">
+        Tidal non connecté.
+      </div>`;
+    qualityUI.style.display = 'none';
+    navStatus.textContent = 'non lié';
+    navStatus.style.color = '';
+    if (prompt) prompt.style.display = 'block';
+    if (searchUI) searchUI.style.display = 'none';
+  }
+}
+
+async function startTidalAuth() {
+  const statusEl = document.getElementById('tidal-auth-status');
+  const errEl    = document.getElementById('tidal-error');
+  errEl.textContent = '';
+  statusEl.textContent = 'Démarrage…';
+
+  try {
+    const data = await apiFetch('/api/tidal/auth/start', { method: 'POST' });
+
+    // Open Tidal auth page
+    window.open(data.url.startsWith('http') ? data.url : 'https://' + data.url, '_blank');
+
+    statusEl.textContent = `Code : ${data.code} — Autorisez dans la fenêtre Tidal, puis patientez…`;
+
+    // Poll every 3s for up to 5 minutes
+    let attempts = 0;
+    _tidalPollTimer = setInterval(async () => {
+      attempts++;
+      if (attempts > 100) {
+        clearInterval(_tidalPollTimer);
+        statusEl.textContent = 'Délai expiré. Réessayez.';
+        return;
+      }
+      try {
+        const check = await apiFetch('/api/tidal/auth/check');
+        if (check && check.authenticated) {
+          clearInterval(_tidalPollTimer);
+          statusEl.textContent = '';
+          await loadTidalStatus();
+          toast('Tidal connecté ! 🌊');
+        }
+      } catch(e) {
+        // Ignore polling errors silently — server may be momentarily busy
+      }
+    }, 3000);
+  } catch(e) {
+    errEl.textContent = e.message;
+    statusEl.textContent = '';
+  }
+}
+
+async function unlinkTidal() {
+  if (!confirm('Déconnecter Tidal ?')) return;
+  try {
+    await apiFetch('/api/tidal/unlink', { method: 'DELETE' });
+    tidalStatus = { connected: false, quality: 'LOSSLESS' };
+    tidalConnected = false;
+    updateTidalUI();
+    toast('Tidal déconnecté.');
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+async function setTidalQuality(q) {
+  try {
+    await apiFetch('/api/tidal/quality', { method: 'POST', body: JSON.stringify({ quality: q }) });
+    tidalStatus.quality = q;
+    updateTidalUI();
+    toast(`Qualité : ${q}`);
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+// Tidal Search
+function setTidalType(type, el) {
+  tidalSearchType = type;
+  document.querySelectorAll('#page-tidal-search .stab').forEach(s => s.classList.remove('active'));
+  el.classList.add('active');
+  const q = document.getElementById('tidal-search-input').value.trim();
+  if (q) doTidalSearch();
+}
+
+function debounceTidalSearch() {
+  clearTimeout(_tidalTimer);
+  const q = document.getElementById('tidal-search-input').value.trim();
+  if (!q) { document.getElementById('tidal-results').innerHTML = ''; return; }
+  _tidalTimer = setTimeout(doTidalSearch, 480);
+}
+
+async function doTidalSearch() {
+  const q = document.getElementById('tidal-search-input').value.trim();
+  if (!q) return;
+  const el = document.getElementById('tidal-results');
+  el.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+  try {
+    const data = await apiFetch(`/api/tidal/search?q=${encodeURIComponent(q)}&type=${tidalSearchType}&limit=20`);
+    renderTidalResults(data, tidalSearchType, el);
+  } catch(e) {
+    el.innerHTML = `<div class="empty"><div class="empty-icon">😕</div><p>${e.message}</p></div>`;
+  }
+}
+
+function renderTidalResults(data, overrideType, overrideContainer) {
+  const el = overrideContainer || document.getElementById('tidal-results');
+  const type = overrideType || tidalSearchType;
+  if (!data.length) { el.innerHTML = '<div class="empty"><div class="empty-icon">🔍</div><div class="empty-title">Aucun résultat</div></div>'; return; }
+
+  if (type === 'tracks') {
+    el.innerHTML = `<div class="card-list">${data.map(t => `
+      <div class="track-row">
+        ${t.image ? `<img class="track-row-img" src="${esc(t.image)}" onerror="this.style.display='none'" />` : '<div class="track-row-img" style="display:flex;align-items:center;justify-content:center">🎵</div>'}
+        <div class="track-row-info">
+          <div class="track-row-name">${esc(t.name)}</div>
+          <div class="track-row-artist">${esc(t.artist)} ${t.album ? '· '+esc(t.album) : ''}</div>
+        </div>
+        <span style="font-size:10px;padding:2px 6px;border-radius:4px;background:#00FECC20;color:#00FECC;flex-shrink:0">FLAC</span>
+        <span style="font-size:12px;color:var(--text-dim);flex-shrink:0">${fmtTime(t.duration)}</span>
+        <button class="play-btn" title="Lire"
+          onclick="playTrack('${esc(t.name).replace(/'/g,"\\'")}','${esc(t.artist).replace(/'/g,"\\'")}','${esc(t.image||'')}',${t.id})">▶</button>
+        <button class="btn btn-ghost btn-sm" style="flex-shrink:0"
+          onclick="addToQueue('${esc(t.name).replace(/'/g,"\\'")}','${esc(t.artist).replace(/'/g,"\\'")}','${esc(t.image||'')}',${t.id})">+</button>
+      </div>`).join('')}</div>`;
+
+  } else if (type === 'artists') {
+    el.innerHTML = `<div class="card-grid">${data.map(a => `
+      <div class="artist-card" style="cursor:pointer" onclick="loadTidalArtistTracks(${a.id},'${esc(a.name).replace(/'/g,"\\'")}')">
+        ${a.image ? `<img class="artist-card-img" src="${esc(a.image)}" onerror="this.outerHTML='<div class=artist-card-img-placeholder>🎤</div>'" />` : '<div class="artist-card-img-placeholder">🎤</div>'}
+        <div class="artist-card-body">
+          <div class="artist-card-name">${esc(a.name)}</div>
+          <div class="artist-card-meta" style="color:#00FECC;font-size:10px">Tidal ▶</div>
+        </div>
+      </div>`).join('')}</div>`;
+
+  } else {
+    // Albums
+    el.innerHTML = `<div class="card-grid">${data.map(a => `
+      <div class="artist-card" style="cursor:pointer" onclick="loadTidalAlbumTracks(${a.id},'${esc(a.name).replace(/'/g,"\\'")}')">
+        ${a.image ? `<img class="artist-card-img" src="${esc(a.image)}" onerror="this.outerHTML='<div class=artist-card-img-placeholder>💿</div>'" />` : '<div class="artist-card-img-placeholder">💿</div>'}
+        <div class="artist-card-body">
+          <div class="artist-card-name">${esc(a.name)}</div>
+          <div class="artist-card-meta">${esc(a.artist)} ${a.release_date ? '· '+a.release_date.slice(0,4) : ''}</div>
+        </div>
+      </div>`).join('')}</div>`;
+  }
+}
+
+async function loadTidalArtistTracks(artistId, artistName) {
+  const el = document.getElementById('tidal-results');
+  el.innerHTML = `
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+      <button class="btn btn-ghost btn-sm" onclick="doTidalSearch()">← Retour</button>
+      <span style="font-size:16px;font-weight:600">${esc(artistName)} — Top morceaux</span>
+    </div>
+    <div class="loading"><div class="spinner"></div></div>`;
+  try {
+    const data = await apiFetch(`/api/tidal/artist/${artistId}/tracks?limit=15`);
+    const list = data.map(t => `
+      <div class="track-row">
+        ${t.image ? `<img class="track-row-img" src="${esc(t.image)}" onerror="this.style.display='none'" />` : '<div class="track-row-img" style="display:flex;align-items:center;justify-content:center">🎵</div>'}
+        <div class="track-row-info">
+          <div class="track-row-name">${esc(t.name)}</div>
+          <div class="track-row-artist">${esc(t.album||'')}</div>
+        </div>
+        <span style="font-size:12px;color:var(--text-dim)">${fmtTime(t.duration)}</span>
+        <button class="play-btn" onclick="playTrack('${esc(t.name).replace(/'/g,"\\'")}','${esc(t.artist).replace(/'/g,"\\'")}','${esc(t.image||'')}',${t.id})">▶</button>
+        <button class="btn btn-ghost btn-sm" onclick="addToQueue('${esc(t.name).replace(/'/g,"\\'")}','${esc(t.artist).replace(/'/g,"\\'")}','${esc(t.image||'')}',${t.id})">+</button>
+      </div>`).join('');
+    el.querySelector('.loading').outerHTML = `<div class="card-list">${list}</div>`;
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+async function loadTidalAlbumTracks(albumId, albumName) {
+  const el = document.getElementById('tidal-results');
+  el.innerHTML = `
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+      <button class="btn btn-ghost btn-sm" onclick="doTidalSearch()">← Retour</button>
+      <span style="font-size:16px;font-weight:600">💿 ${esc(albumName)}</span>
+    </div>
+    <div class="loading"><div class="spinner"></div></div>`;
+  try {
+    const data = await apiFetch(`/api/tidal/album/${albumId}/tracks`);
+    const list = data.map(t => `
+      <div class="track-row">
+        ${t.image ? `<img class="track-row-img" src="${esc(t.image)}" onerror="this.style.display='none'" />` : '<div class="track-row-img">🎵</div>'}
+        <div class="track-row-info">
+          <div class="track-row-name">${esc(t.name)}</div>
+          <div class="track-row-artist">${esc(t.artist||'')}</div>
+        </div>
+        <span style="font-size:12px;color:var(--text-dim)">${fmtTime(t.duration)}</span>
+        <button class="play-btn" onclick="playTrack('${esc(t.name).replace(/'/g,"\\'")}','${esc(t.artist).replace(/'/g,"\\'")}','${esc(t.image||'')}',${t.id})">▶</button>
+        <button class="btn btn-ghost btn-sm" onclick="addToQueue('${esc(t.name).replace(/'/g,"\\'")}','${esc(t.artist).replace(/'/g,"\\'")}','${esc(t.image||'')}',${t.id})">+</button>
+      </div>`).join('');
+    el.querySelector('.loading').outerHTML = `<div class="card-list">${list}</div>`;
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+// ── Navigate override — handle tidal-search ───────────────────────────────────
+const _origNavigate = navigate;
+
+// ── Recommendations tabs ──────────────────────────────────────────────────────
+let recoTab = 'artists';
+
+function switchRecoTab(tab, el) {
+  recoTab = tab;
+  document.querySelectorAll('#page-recommendations .stab').forEach(s => s.classList.remove('active'));
+  el.classList.add('active');
+  loadRecommendations();
+}
+
+// ── Keyboard shortcuts ────────────────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    document.getElementById('modal-overlay').classList.remove('open');
+  }
+  if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+    e.preventDefault();
+    navigate('search');
+    document.getElementById('search-input').focus();
+  }
+  if (e.key === ' ' && !['INPUT','TEXTAREA'].includes(document.activeElement.tagName)) {
+    e.preventDefault();
+    playerToggle();
+  }
+});
+
+// ── Admin Panel ───────────────────────────────────────────────────────────────
+async function loadAdminUsers() {
+  const el = document.getElementById('admin-users-list');
+  if (!el) return;
+  try {
+    const users = await apiFetch('/api/admin/users');
+    if (!users.length) { el.innerHTML = '<p style="color:var(--text-dim);font-size:13px">Aucun utilisateur.</p>'; return; }
+    el.innerHTML = users.map(u => `
+      <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)">
+        <div style="width:32px;height:32px;border-radius:50%;background:${u.is_admin ? 'var(--accent)' : 'var(--accent2)'};display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#000;flex-shrink:0">
+          ${u.username[0].toUpperCase()}
+        </div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13px;font-weight:600">${esc(u.username)}
+            ${u.is_admin ? '<span style="font-size:10px;background:var(--accent)20;color:var(--accent);padding:1px 6px;border-radius:3px;margin-left:4px">admin</span>' : ''}
+          </div>
+          <div style="font-size:11px;color:var(--text-dim)">${esc(u.email)}</div>
+        </div>
+        ${u.id !== currentUser.id ? `
+          <button class="btn btn-ghost btn-sm" onclick="adminSetPassword(${u.id},'${esc(u.username)}')" title="Changer le mot de passe">🔑</button>
+          <button class="btn btn-ghost btn-sm" onclick="adminToggleAdmin(${u.id},${u.is_admin},'${esc(u.username)}')" title="${u.is_admin ? 'Retirer admin' : 'Promouvoir admin'}">
+            ${u.is_admin ? '👤' : '⭐'}
+          </button>
+          <button class="btn btn-danger btn-sm" onclick="adminDeleteUser(${u.id},'${esc(u.username)}')" title="Supprimer">✕</button>
+        ` : '<span style="font-size:11px;color:var(--text-dim)">(vous)</span>'}
+      </div>`).join('');
+  } catch(e) { el.innerHTML = `<p style="color:var(--danger);font-size:13px">${e.message}</p>`; }
+}
+
+async function adminCreateUser() {
+  const username = document.getElementById('nu-username').value.trim();
+  const email    = document.getElementById('nu-email').value.trim();
+  const password = document.getElementById('nu-password').value;
+  const isAdmin  = document.getElementById('nu-is-admin').checked;
+  const errEl    = document.getElementById('nu-error');
+  const statusEl = document.getElementById('nu-status');
+  errEl.textContent = ''; statusEl.textContent = 'Création…';
+  try {
+    await apiFetch('/api/admin/users', {
+      method: 'POST',
+      body: JSON.stringify({ username, email, password, is_admin: isAdmin })
+    });
+    document.getElementById('nu-username').value = '';
+    document.getElementById('nu-email').value = '';
+    document.getElementById('nu-password').value = '';
+    document.getElementById('nu-is-admin').checked = false;
+    statusEl.textContent = '';
+    toast(`Utilisateur ${username} créé !`);
+    loadAdminUsers();
+  } catch(e) { errEl.textContent = e.message; statusEl.textContent = ''; }
+}
+
+async function adminSetPassword(userId, username) {
+  const pwd = prompt(`Nouveau mot de passe pour ${username} (8 min) :`);
+  if (!pwd) return;
+  if (pwd.length < 8) { toast('Mot de passe trop court', 'error'); return; }
+  try {
+    await apiFetch(`/api/admin/users/${userId}/set-password`, {
+      method: 'POST', body: JSON.stringify({ new_password: pwd })
+    });
+    toast(`Mot de passe de ${username} mis à jour`);
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+async function adminToggleAdmin(userId, currentIsAdmin, username) {
+  const action = currentIsAdmin ? 'retirer les droits admin à' : 'promouvoir admin';
+  if (!confirm(`${action} ${username} ?`)) return;
+  try {
+    await apiFetch(`/api/admin/users/${userId}`, {
+      method: 'PATCH', body: JSON.stringify({ is_admin: !currentIsAdmin })
+    });
+    toast(`${username} ${currentIsAdmin ? 'n\'est plus admin' : 'est maintenant admin'}`);
+    loadAdminUsers();
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+async function adminDeleteUser(userId, username) {
+  if (!confirm(`Supprimer l'utilisateur ${username} ? Cette action est irréversible.`)) return;
+  try {
+    await apiFetch(`/api/admin/users/${userId}`, { method: 'DELETE' });
+    toast(`Utilisateur ${username} supprimé`);
+    loadAdminUsers();
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+// ── Boot ──────────────────────────────────────────────────────────────────────
+if (token) {
+  initApp();
+} else {
+  checkSetup();
+}
+</script>
+</body>
+</html>
